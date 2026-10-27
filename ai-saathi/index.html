@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f6f3ff">
+  <title>AI Saathi | Your Visual Assistant</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#home">
+      <span class="brand-icon">✦</span>
+      AI <span>Saathi</span>
+    </a>
+    <a href="#about" class="about-link">About</a>
+  </header>
+
+  <main id="home">
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="tag">ACCESSIBILITY • AI FOR EVERYONE</span>
+        <h1>See more.<br><span>Understand better.</span></h1>
+        <p>Upload an image or type something you want to understand. AI Saathi will explain it in simple language and can read the answer aloud.</p>
+        <a class="primary-btn" href="#assistant">Try AI Saathi ↓</a>
+      </div>
+      <div class="hero-illustration" aria-hidden="true">
+        <div class="illustration-circle">👁️</div>
+        <div class="floating-card">🔊 Listen to answers</div>
+        <div class="floating-card second">🖼️ Understand images</div>
+      </div>
+    </section>
+
+    <section class="benefits" aria-label="Features">
+      <article><span>📷</span><div><strong>Image understanding</strong><p>Describe photos and signs.</p></div></article>
+      <article><span>🌐</span><div><strong>Simple language</strong><p>Choose English or Hindi.</p></div></article>
+      <article><span>🔊</span><div><strong>Read aloud</strong><p>Listen to the response.</p></div></article>
+    </section>
+
+    <section id="assistant" class="assistant-section">
+      <div class="section-heading">
+        <span class="tag">YOUR PERSONAL ASSISTANT</span>
+        <h2>How can I help you today?</h2>
+        <p>Upload a picture, ask a question, or do both.</p>
+      </div>
+
+      <div class="workspace">
+        <form id="assistantForm" class="input-panel">
+          <label class="field-label" for="imageInput">1. Add an image (optional)</label>
+
+          <label class="upload-box" for="imageInput" id="uploadBox">
+            <span class="upload-icon">＋</span>
+            <strong>Upload a picture</strong>
+            <span>Choose a photo of a sign, object, or document</span>
+            <span class="upload-small">JPG, PNG, WEBP · Max 8 MB</span>
+          </label>
+
+          <input
+            id="imageInput"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            capture="environment"
+          >
+
+          <div id="imagePreviewContainer" class="preview-container hidden">
+            <img id="imagePreview" alt="Preview of your selected image">
+            <button type="button" id="removeImage" class="remove-btn">Remove image ✕</button>
+          </div>
+
+          <label class="field-label" for="questionInput">2. What do you want to know?</label>
+          <textarea
+            id="questionInput"
+            rows="4"
+            maxlength="1500"
+            placeholder="Example: Explain this notice in simple Hindi. Or: What is in this picture?"
+          ></textarea>
+
+          <label class="field-label" for="languageSelect">3. Choose answer language</label>
+          <select id="languageSelect">
+            <option value="English">English</option>
+            <option value="Hindi">Hindi</option>
+            <option value="Hinglish">Hinglish (Hindi + English)</option>
+          </select>
+
+          <button id="analyzeButton" class="primary-btn full-width" type="submit">
+            ✨ Understand with AI
+          </button>
+
+          <p class="privacy-note">Your image is sent to the selected AI API when you request analysis. Avoid uploading private documents or sensitive personal information.</p>
+        </form>
+
+        <section class="result-panel" aria-labelledby="resultHeading">
+          <div class="result-header">
+            <div>
+              <span class="tag">YOUR RESULTS</span>
+              <h2 id="resultHeading">Your answer will appear here</h2>
+            </div>
+            <span class="result-sparkle">✦</span>
+          </div>
+
+          <div id="emptyState" class="empty-state">
+            <div class="empty-icon">💬</div>
+            <h3>I'm ready to help!</h3>
+            <p>Upload an image or enter a question to get started.</p>
+          </div>
+
+          <div id="loadingState" class="loading-state hidden" role="status">
+            <div class="loader"></div>
+            <p>AI Saathi is understanding your request...</p>
+          </div>
+
+          <div id="errorState" class="error-state hidden" role="alert"></div>
+
+          <div id="resultContent" class="result-content hidden">
+            <div id="answerText" class="answer-text"></div>
+
+            <div id="warningBox" class="warning-box hidden">
+              <strong>⚠️ Please pay attention</strong>
+              <p id="warningText"></p>
+            </div>
+
+            <div class="result-actions">
+              <button type="button" id="speakButton">🔊 Read aloud</button>
+              <button type="button" id="stopSpeakButton">⏹ Stop</button>
+              <button type="button" id="copyButton">📋 Copy answer</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="about" class="about-section">
+      <span class="tag">WHY AI SAATHI?</span>
+      <h2>Technology that helps everyone</h2>
+      <p>AI Saathi aims to make everyday information easier to understand. It can assist with images and text, but it may make mistakes. Always verify important instructions, safety warnings, and official information.</p>
+      <div class="disclaimer">AI Saathi is an assistive prototype, not a replacement for a trained guide, emergency service, or professional advice.</div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Made with 💜 for a more accessible world.</p>
+    <p>AI Saathi · Hackathon prototype</p>
+  </footer>
+</body>
+</html>

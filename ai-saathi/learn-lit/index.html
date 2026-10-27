@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LearnLite | Learn Smarter</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="header">
+    <a class="logo" href="#home">Learn<span>Lite</span></a>
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#courses">Courses</a>
+      <a href="#planner">Planner</a>
+      <a href="#buddy">Study Buddy</a>
+    </nav>
+    <div class="header-actions">
+      <span id="networkStatus">Checking connection...</span>
+      <button id="themeToggle" type="button">🌙 Theme</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div>
+        <p class="eyebrow">YOUR PERSONAL LEARNING SPACE</p>
+        <h1>Learn something new.<br><span>Every single day.</span></h1>
+        <p>Watch lessons, track progress and build better study habits.</p>
+        <a class="primary-btn" href="#courses">Explore courses ↓</a>
+      </div>
+        <div class="hero-art">📚</div>
+    </section>
+
+    <section class="section">
+      <h2>Your dashboard</h2>
+      <div class="stats-grid">
+        <article class="stat-card"><span>📘 Courses started</span><strong id="coursesStarted">0</strong></article>
+        <article class="stat-card"><span>✅ Lessons completed</span><strong id="lessonsCompleted">0</strong></article>
+        <article class="stat-card"><span>⏱️ Focus minutes</span><strong id="focusMinutes">0</strong></article>
+        <article class="stat-card"><span>🏆 Quiz points</span><strong id="quizPoints">0</strong></article>
+      </div>
+    </section>
+
+    <section class="section" id="courses">
+      <h2>Explore courses</h2>
+      <p class="muted">Choose a course and select a lesson to watch its video.</p>
+
+      <div class="toolbar">
+        <input id="courseSearch" type="search" placeholder="Search courses...">
+        <select id="categoryFilter">
+          <option value="All">All categories</option>
+          <option value="Technology">Technology</option>
+          <option value="Science">Science</option>
+          <option value="Mathematics">Mathematics</option>
+          <option value="Communication">Communication</option>
+        </select>
+        <button id="showBookmarks" type="button">☆ Saved courses</button>
+      </div>
+
+      <div class="course-grid" id="courseGrid"></div>
+    </section>
+
+    <section class="section" id="lessonArea">
+      <h2>Lesson room</h2>
+      <p class="muted">Select a course and lesson above to begin.</p>
+      <div class="lesson-layout">
+        <aside class="lesson-sidebar">
+          <h3>Lessons</h3>
+          <div id="lessonList">Choose a course first.</div>
+        </aside>
+
+        <div class="lesson-content">
+          <h3 id="lessonTitle">Welcome to LearnLite</h3>
+          <p id="lessonText">Your selected lesson will appear here.</p>
+
+          <div class="video-wrapper" id="videoContainer">
+            <div class="video-placeholder">🎬 Select a lesson to load its video.</div>
+          </div>
+
+          <p class="muted" id="videoHelp">If a video cannot play here, use the Watch on YouTube link.</p>
+          <div class="button-row">
+            <button id="readLesson" type="button">🔊 Read lesson aloud</button>
+            <button id="stopReading" type="button">⏹ Stop reading</button>
+            <button id="completeLesson" class="primary-btn" type="button">✓ Mark complete</button>
+          </div>
+
+          <label for="lessonNotes">My lesson notes</label>
+          <textarea id="lessonNotes" rows="4" placeholder="Write your notes here..."></textarea>
+          <p class="muted">Notes are saved in this browser.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="quiz">
+      <h2>Quick quiz 🧠</h2>
+      <div class="panel">
+        <p id="quizProgress">Question 1</p>
+        <h3 id="quizQuestion">Loading question...</h3>
+        <div id="quizOptions"></div>
+        <p id="quizFeedback" role="status"></p>
+        <div class="button-row">
+          <button id="checkAnswer" class="primary-btn" type="button">Check answer</button>
+          <button id="nextQuestion" type="button" disabled>Next question →</button>
+          <button id="restartQuiz" type="button">Restart quiz</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="planner">
+      <h2>Study planner 📅</h2>
+      <form id="taskForm" class="panel">
+        <label for="taskInput">What do you want to study?</label>
+        <div class="toolbar">
+          <input id="taskInput" required maxlength="120" placeholder="e.g. Revise JavaScript">
+          <input id="taskDate" type="date" aria-label="Task date">
+          <button class="primary-btn" type="submit">Add task</button>
+        </div>
+      </form>
+      <div id="taskList" class="task-list"></div>
+    </section>
+
+    <section class="section" id="focus">
+      <h2>Focus timer ⏱️</h2>
+      <div class="panel timer-panel">
+        <label for="focusDuration">Choose duration</label>
+        <select id="focusDuration">
+          <option value="5">5 minutes</option>
+          <option value="15">15 minutes</option>
+          <option value="25" selected>25 minutes</option>
+          <option value="45">45 minutes</option>
+        </select>
+        <div id="timerDisplay" class="timer-display">25:00</div>
+        <div class="button-row">
+          <button id="startTimer" class="primary-btn" type="button">▶ Start</button>
+          <button id="pauseTimer" type="button">Ⅱ Pause</button>
+          <button id="resetTimer" type="button">↻ Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="buddy">
+      <h2>Study Buddy 💬</h2>
+      <p class="muted">A simple demo assistant for study suggestions.</p>
+      <div class="panel chat-panel">
+        <div id="chatMessages" class="chat-messages" aria-live="polite">
+          <p class="bot-message">Hi! Ask me for a study tip, motivation, or revision advice.</p>
+        </div>
+        <form id="chatForm" class="toolbar">
+          <input id="chatInput" required maxlength="300" placeholder="Ask your Study Buddy...">
+          <button class="primary-btn" type="submit">Send</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Achievements 🏆</h2>
+      <div id="achievements" class="achievement-grid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 LearnLite · Learn at your own pace.</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

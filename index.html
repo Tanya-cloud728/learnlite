@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f5ff">
+  <title>LearnLite — Learn Smarter</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="navbar">
+    <a href="#home" class="logo"><span class="logo-icon">✦</span> Learn<span>Lite</span></a>
+    <nav>
+      <a href="#learn">Learn</a>
+      <a href="#revision">My Library</a>
+      <a href="#progress">Progress</a>
+    </nav>
+    <span class="offline-badge"><span></span> Offline-ready</span>
+  </header>
+
+  <main id="home">
+    <section class="hero">
+      <div class="hero-text">
+        <span class="eyebrow">YOUR PERSONAL AI STUDY BUDDY</span>
+        <h1>Big chapters.<br><span>Simple learning.</span></h1>
+        <p>Turn textbook photos into easy explanations, quick quizzes and revision notes — powered by Gemma 4.</p>
+        <a class="btn primary" href="#learn">Start learning <span>→</span></a>
+        <div class="hero-points">
+          <span>✓ Beginner-friendly</span>
+          <span>✓ Save for offline revision</span>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="book">📚</div>
+        <div class="art-card card-one">🧠 Simple explanations</div>
+        <div class="art-card card-two">🎯 Quick quizzes</div>
+        <div class="art-card card-three">✨ Smart revision</div>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat-card"><span>📖</span><div><small>Saved lessons</small><strong id="savedCount">0</strong></div></article>
+      <article class="stat-card"><span>🏆</span><div><small>Quizzes attempted</small><strong id="quizCount">0</strong></div></article>
+      <article class="stat-card"><span>🎯</span><div><small>Average score</small><strong id="averageScore">0%</strong></div></article>
+    </section>
+
+    <section id="learn" class="section">
+      <div class="section-heading">
+        <div><span class="eyebrow">STEP 01 · UPLOAD</span><h2>Turn your textbook into a lesson</h2></div>
+        <p>Take a clear photo of one page or a diagram.</p>
+      </div>
+
+      <div class="learning-layout">
+        <form id="studyForm" class="panel upload-panel">
+          <label class="upload-zone" for="textbookImage" id="dropZone">
+            <span class="upload-symbol">＋</span>
+            <strong>Upload textbook photo</strong>
+            <span>Click to choose an image from your device</span>
+            <small>JPG, PNG or WEBP · Maximum 8 MB</small>
+          </label>
+          <input id="textbookImage" type="file" accept="image/jpeg,image/png,image/webp" required>
+
+          <div id="previewWrap" class="preview-wrap hidden">
+            <img id="previewImage" alt="Selected textbook page">
+            <button type="button" id="removeImage" class="text-button">Remove photo ✕</button>
+          </div>
+
+          <label for="topicInput" class="field-label">Topic name (optional)</label>
+          <input id="topicInput" type="text" maxlength="100" placeholder="e.g. Photosynthesis, DBMS, Probability">
+
+          <label for="levelSelect" class="field-label">Explain for</label>
+          <select id="levelSelect">
+            <option value="a complete beginner">A complete beginner</option>
+            <option value="a school student">A school student</option>
+            <option value="a college student">A college student</option>
+          </select>
+
+          <label for="languageSelect" class="field-label">Explanation language</label>
+          <select id="languageSelect">
+            <option value="simple English">Simple English</option>
+            <option value="Hindi">Hindi</option>
+            <option value="Hinglish">Hinglish (Hindi + English)</option>
+          </select>
+
+          <button id="generateBtn" type="submit" class="btn primary full">✨ Explain & generate quiz</button>
+          <p class="privacy-note">Your photo is sent to the AI service for analysis. Do not upload private or sensitive documents.</p>
+          <p id="statusMessage" class="status-message" role="status"></p>
+        </form>
+
+        <aside class="panel how-panel">
+          <span class="eyebrow">HOW IT WORKS</span>
+          <h3>From page to progress</h3>
+          <div class="step"><span>1</span><div><strong>Upload</strong><p>Choose a clear textbook photo.</p></div></div>
+          <div class="step"><span>2</span><div><strong>Understand</strong><p>Gemma 4 explains the key ideas simply.</p></div></div>
+          <div class="step"><span>3</span><div><strong>Practice</strong><p>Answer five questions from your lesson.</p></div></div>
+          <div class="step"><span>4</span><div><strong>Revise</strong><p>Save the lesson and revisit weak topics offline.</p></div></div>
+          <div class="tip-box">💡 Tip: Use good lighting and include the full page so the text is easier to read.</div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="lesson" class="section hidden">
+      <div class="section-heading">
+        <div><span class="eyebrow">STEP 02 · UNDERSTAND</span><h2 id="lessonTitle">Your lesson</h2></div>
+        <button id="saveLessonBtn" class="btn secondary">♡ Save for revision</button>
+      </div>
+      <article class="panel lesson-panel">
+        <div class="lesson-meta"><span class="ai-tag">✦ Gemma 4 explanation</span><span id="lessonMode">New lesson</span></div>
+        <div id="explanation" class="explanation"></div>
+        <div class="lesson-actions">
+          <button id="readBtn" class="btn secondary">🔊 Read aloud</button>
+          <button id="stopReadBtn" class="btn secondary">⏹ Stop</button>
+        </div>
+      </article>
+    </section>
+
+    <section id="quizSection" class="section hidden">
+      <div class="section-heading">
+        <div><span class="eyebrow">STEP 03 · PRACTICE</span><h2>Check your understanding</h2></div>
+        <p>Five questions based on your textbook content.</p>
+      </div>
+      <article class="panel quiz-panel">
+        <div class="quiz-top"><span id="questionCounter">Question 1 of 5</span><span id="quizProgressText">0% complete</span></div>
+        <div class="progress-track"><div id="quizProgressBar"></div></div>
+        <h3 id="questionText">Your question will appear here.</h3>
+        <div id="optionsList" class="options-list"></div>
+        <p id="quizFeedback" class="quiz-feedback" aria-live="polite"></p>
+        <div class="quiz-controls">
+          <button id="checkAnswerBtn" class="btn primary">Check answer</button>
+          <button id="nextQuestionBtn" class="btn primary hidden">Next question →</button>
+        </div>
+        <div id="quizResult" class="quiz-result hidden"></div>
+      </article>
+    </section>
+
+    <section id="revision" class="section">
+      <div class="section-heading">
+        <div><span class="eyebrow">YOUR PERSONAL LIBRARY</span><h2>Offline revision shelf</h2></div>
+        <p>Saved lessons stay on this browser for later revision.</p>
+      </div>
+      <div id="revisionList" class="revision-grid"></div>
+      <p id="emptyLibrary" class="empty-library">📚 Your shelf is empty. Generate a lesson and save it here.</p>
+    </section>
+
+    <section id="progress" class="section">
+      <div class="section-heading">
+        <div><span class="eyebrow">STEP 04 · IMPROVE</span><h2>Your learning progress</h2></div>
+        <p>Use your quiz scores to decide what to revise next.</p>
+      </div>
+      <div class="progress-layout">
+        <article class="panel progress-panel">
+          <span class="progress-icon">🎯</span>
+          <h3>Revision recommendation</h3>
+          <p id="recommendationText">Complete a lesson quiz to receive a personalised revision suggestion.</p>
+          <button id="reviseRecommendedBtn" class="btn secondary hidden">Revise this lesson →</button>
+        </article>
+        <article class="panel history-panel">
+          <h3>Recent quiz scores</h3>
+          <div id="scoreHistory"></div>
+          <p id="emptyScores" class="muted">Your quiz attempts will appear here.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer><strong>LearnLite</strong> — Learn at your pace. Revise anywhere. <span>Built for accessible learning ✦</span></footer>
+  <div id="toast" class="toast" role="status"></div>
+</body>
+</html>
