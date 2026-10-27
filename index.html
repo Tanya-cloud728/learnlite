@@ -1,171 +1,231 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f7f5ff">
-  <title>LearnLite — Learn Smarter</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="script.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LearnLite — Learn anywhere</title>
+<meta name="theme-color" content="#6558e8">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="navbar">
-    <a href="#home" class="logo"><span class="logo-icon">✦</span> Learn<span>Lite</span></a>
-    <nav>
-      <a href="#learn">Learn</a>
-      <a href="#revision">My Library</a>
-      <a href="#progress">Progress</a>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">◈</div><span>Learn<span>Lite</span></span></div>
+    <nav class="nav" aria-label="Main navigation">
+      <button class="active" data-page="home"><span class="ico">⌂</span><span class="navlabel">Home</span></button>
+      <button data-page="learn"><span class="ico">▧</span><span class="navlabel">Learn from photo</span></button>
+      <button data-page="notes"><span class="ico">▤</span><span class="navlabel">My notes</span></button>
+      <button data-page="resources"><span class="ico">▣</span><span class="navlabel">Study resources</span></button>
+      <button data-page="progress"><span class="ico">▥</span><span class="navlabel">Progress</span></button>
+      <button data-page="planner"><span class="ico">◷</span><span class="navlabel">Study planner</span></button>
     </nav>
-    <span class="offline-badge"><span></span> Offline-ready</span>
-  </header>
+    <div class="sidebottom"><div style="font-size:25px;margin-bottom:8px">🌱</div><strong>Small steps count.</strong><p>Learn with less data. Keep going, even offline.</p></div>
+  </aside>
 
-  <main id="home">
-    <section class="hero">
-      <div class="hero-text">
-        <span class="eyebrow">YOUR PERSONAL AI STUDY BUDDY</span>
-        <h1>Big chapters.<br><span>Simple learning.</span></h1>
-        <p>Turn textbook photos into easy explanations, quick quizzes and revision notes — powered by Gemma 4.</p>
-        <a class="btn primary" href="#learn">Start learning <span>→</span></a>
-        <div class="hero-points">
-          <span>✓ Beginner-friendly</span>
-          <span>✓ Save for offline revision</span>
+  <main class="main">
+    <header class="topbar">
+      <div><strong>Good to see you, learner 👋</strong><div class="tagline">Your study buddy, designed for every connection.</div></div>
+      <div class="topactions">
+        <span class="pill" id="connection">● Offline-ready</span>
+        <button class="iconbtn" id="themeBtn" title="Toggle dark/light mode" aria-label="Toggle theme">☾</button>
+        <button class="iconbtn" id="studentBtn" title="Student profile">♙</button>
+      </div>
+    </header>
+
+    <div class="offlinebanner" id="offlineBanner">You're offline. Your saved notes, quizzes and planner are still available on this device.</div>
+    <div class="content">
+      <section class="section active" id="page-home">
+        <div class="hero">
+          <div>
+            <h1>Big learning.<br>Small data.</h1>
+            <p>Turn textbook photos into simple explanations, quick quizzes and a study plan — made for low-bandwidth communities.</p>
+            <small>✦ Multimodal learning · Offline revision</small>
+          </div>
+          <div class="heroart">📚✨</div>
         </div>
-      </div>
-      <div class="hero-art" aria-hidden="true">
-        <div class="book">📚</div>
-        <div class="art-card card-one">🧠 Simple explanations</div>
-        <div class="art-card card-two">🎯 Quick quizzes</div>
-        <div class="art-card card-three">✨ Smart revision</div>
-      </div>
-    </section>
 
-    <section class="stats-grid">
-      <article class="stat-card"><span>📖</span><div><small>Saved lessons</small><strong id="savedCount">0</strong></div></article>
-      <article class="stat-card"><span>🏆</span><div><small>Quizzes attempted</small><strong id="quizCount">0</strong></div></article>
-      <article class="stat-card"><span>🎯</span><div><small>Average score</small><strong id="averageScore">0%</strong></div></article>
-    </section>
+        <div class="layout">
+          <div class="stack">
+            <div class="card">
+              <div class="cardhead">
+                <div class="step"><span class="num">1</span><h2>Learn from a textbook photo</h2></div>
+                <span class="tiny muted">JPG · PNG</span>
+              </div>
+              <div class="uploadrow">
+                <label class="drop" for="photo">
+                  <div class="camera">📷</div>
+                  <strong>Tap to upload a page</strong>
+                  <p>Or take a clear photo of your textbook</p>
+                  <p>Compressed images use less data.</p>
+                  <img class="preview" id="preview" alt="Textbook photo preview">
+                </label>
+                <div class="sample">
+                  <div class="tiny muted" style="margin-bottom:8px">No photo handy?</div>
+                  <button class="btn secondary" id="sampleBtn" style="width:100%">Try a sample</button>
+                  <div class="note">A demo lesson is included so you can test LearnLite without an API key.</div>
+                </div>
+              </div>
+              <input id="photo" type="file" accept="image/*" capture="environment" hidden>
+              <div class="fieldgroup" style="margin-top:14px">
+                <label class="fieldlabel" for="topic">What subject is this? (optional)</label>
+                <input id="topic" class="field" placeholder="e.g. Science, fractions, photosynthesis">
+              </div>
+              <div class="btnrow">
+                <button class="btn" id="explainBtn">✨ Explain simply</button>
+                <button class="btn secondary" id="saveBtn" disabled>Save for offline</button>
+              </div>
+              <div class="note">AI note: Demo mode works instantly. Real textbook-photo analysis requires connecting an AI model through a backend. Never put a private API key in a public GitHub repo.</div>
+            </div>
 
-    <section id="learn" class="section">
-      <div class="section-heading">
-        <div><span class="eyebrow">STEP 01 · UPLOAD</span><h2>Turn your textbook into a lesson</h2></div>
-        <p>Take a clear photo of one page or a diagram.</p>
-      </div>
+            <div class="card">
+              <div class="cardhead"><div class="step"><span class="num">2</span><h2>Simple explanation</h2></div><span class="status" id="explainStatus">Waiting for a lesson</span></div>
+              <div id="explanation" class="empty">Your beginner-friendly explanation will appear here. We'll keep the language simple and highlight the key ideas.</div>
+            </div>
 
-      <div class="learning-layout">
-        <form id="studyForm" class="panel upload-panel">
-          <label class="upload-zone" for="textbookImage" id="dropZone">
-            <span class="upload-symbol">＋</span>
-            <strong>Upload textbook photo</strong>
-            <span>Click to choose an image from your device</span>
-            <small>JPG, PNG or WEBP · Maximum 8 MB</small>
-          </label>
-          <input id="textbookImage" type="file" accept="image/jpeg,image/png,image/webp" required>
-
-          <div id="previewWrap" class="preview-wrap hidden">
-            <img id="previewImage" alt="Selected textbook page">
-            <button type="button" id="removeImage" class="text-button">Remove photo ✕</button>
+            <div class="card">
+              <div class="cardhead"><div class="step"><span class="num">3</span><h2>Quick quiz</h2></div><span class="tiny muted">5 questions · instant feedback</span></div>
+              <div id="quizArea" class="empty">Generate a lesson to unlock a five-question practice quiz.</div>
+              <div class="btnrow">
+                <button class="btn" id="submitQuiz" disabled>Check my answers</button>
+                <button class="btn secondary" id="saveQuiz" disabled>Save quiz</button>
+              </div>
+              <div id="quizFeedback" aria-live="polite"></div>
+            </div>
           </div>
 
-          <label for="topicInput" class="field-label">Topic name (optional)</label>
-          <input id="topicInput" type="text" maxlength="100" placeholder="e.g. Photosynthesis, DBMS, Probability">
+          <div class="stack">
+            <div class="card">
+              <div class="cardhead"><h2>My learning snapshot</h2><span>🏆</span></div>
+              <div class="statgrid">
+                <div class="stat"><b id="lessonsStat">0</b><span>Lessons saved</span></div>
+                <div class="stat"><b id="attemptsStat">0</b><span>Quiz attempts</span></div>
+                <div class="stat"><b id="bestStat">—</b><span>Best score</span></div>
+              </div>
+              <div class="progressbar"><span id="progressFill"></span></div>
+              <div class="tiny muted" id="progressCaption">Your progress is saved on this device.</div>
+            </div>
 
-          <label for="levelSelect" class="field-label">Explain for</label>
-          <select id="levelSelect">
-            <option value="a complete beginner">A complete beginner</option>
-            <option value="a school student">A school student</option>
-            <option value="a college student">A college student</option>
-          </select>
+            <div class="card">
+              <div class="cardhead"><h2>Focus next</h2><span>🎯</span></div>
+              <div id="recommendation" class="note" style="margin:0">Take your first quiz to get a revision recommendation based on your score.</div>
+              <button class="btn secondary" style="width:100%;margin-top:12px" data-goto="planner">Open study planner →</button>
+            </div>
 
-          <label for="languageSelect" class="field-label">Explanation language</label>
-          <select id="languageSelect">
-            <option value="simple English">Simple English</option>
-            <option value="Hindi">Hindi</option>
-            <option value="Hinglish">Hinglish (Hindi + English)</option>
-          </select>
-
-          <button id="generateBtn" type="submit" class="btn primary full">✨ Explain & generate quiz</button>
-          <p class="privacy-note">Your photo is sent to the AI service for analysis. Do not upload private or sensitive documents.</p>
-          <p id="statusMessage" class="status-message" role="status"></p>
-        </form>
-
-        <aside class="panel how-panel">
-          <span class="eyebrow">HOW IT WORKS</span>
-          <h3>From page to progress</h3>
-          <div class="step"><span>1</span><div><strong>Upload</strong><p>Choose a clear textbook photo.</p></div></div>
-          <div class="step"><span>2</span><div><strong>Understand</strong><p>Gemma 4 explains the key ideas simply.</p></div></div>
-          <div class="step"><span>3</span><div><strong>Practice</strong><p>Answer five questions from your lesson.</p></div></div>
-          <div class="step"><span>4</span><div><strong>Revise</strong><p>Save the lesson and revisit weak topics offline.</p></div></div>
-          <div class="tip-box">💡 Tip: Use good lighting and include the full page so the text is easier to read.</div>
-        </aside>
-      </div>
-    </section>
-
-    <section id="lesson" class="section hidden">
-      <div class="section-heading">
-        <div><span class="eyebrow">STEP 02 · UNDERSTAND</span><h2 id="lessonTitle">Your lesson</h2></div>
-        <button id="saveLessonBtn" class="btn secondary">♡ Save for revision</button>
-      </div>
-      <article class="panel lesson-panel">
-        <div class="lesson-meta"><span class="ai-tag">✦ Gemma 4 explanation</span><span id="lessonMode">New lesson</span></div>
-        <div id="explanation" class="explanation"></div>
-        <div class="lesson-actions">
-          <button id="readBtn" class="btn secondary">🔊 Read aloud</button>
-          <button id="stopReadBtn" class="btn secondary">⏹ Stop</button>
+            <div class="card">
+              <div class="cardhead"><h2>Low-data study shelf</h2><span>📶</span></div>
+              <div class="resource"><div class="resourceicon">📝</div><div><strong>Text notes</strong><small>Small files, available offline</small></div><span class="status">Low data</span></div>
+              <div class="resource"><div class="resourceicon">🎧</div><div><strong>Audio-friendly learning</strong><small>Read aloud using your device</small></div><button class="btn secondary" id="readBtn">Read</button></div>
+              <div class="resource"><div class="resourceicon">🎞️</div><div><strong>Video learning tips</strong><small>Choose 144p/240p; download on Wi-Fi</small></div></div>
+              <p class="tiny muted">Videos are not hosted here. Use trusted free resources when connected, then save text summaries for offline use.</p>
+            </div>
+          </div>
         </div>
-      </article>
-    </section>
+      </section>
 
-    <section id="quizSection" class="section hidden">
-      <div class="section-heading">
-        <div><span class="eyebrow">STEP 03 · PRACTICE</span><h2>Check your understanding</h2></div>
-        <p>Five questions based on your textbook content.</p>
-      </div>
-      <article class="panel quiz-panel">
-        <div class="quiz-top"><span id="questionCounter">Question 1 of 5</span><span id="quizProgressText">0% complete</span></div>
-        <div class="progress-track"><div id="quizProgressBar"></div></div>
-        <h3 id="questionText">Your question will appear here.</h3>
-        <div id="optionsList" class="options-list"></div>
-        <p id="quizFeedback" class="quiz-feedback" aria-live="polite"></p>
-        <div class="quiz-controls">
-          <button id="checkAnswerBtn" class="btn primary">Check answer</button>
-          <button id="nextQuestionBtn" class="btn primary hidden">Next question →</button>
+      <section class="section" id="page-learn">
+        <h1 class="pageheading">Learn from a photo</h1>
+        <p class="pageintro">Upload a textbook page, then make a short lesson and practice quiz.</p>
+        <button class="btn" data-goto="home">← Back to lesson workspace</button>
+      </section>
+
+      <section class="section" id="page-notes">
+        <h1 class="pageheading">My offline notes</h1>
+        <p class="pageintro">Saved explanations and quiz results stay on this device.</p>
+        <div class="card" id="notesList"><div class="empty">No saved lessons yet. Create a lesson first.</div></div>
+        <button class="btn secondary" id="exportBtn" style="margin-top:12px">Export notes as text</button>
+      </section>
+
+      <section class="section" id="page-resources">
+        <h1 class="pageheading">Study resources</h1>
+        <p class="pageintro">Prefer small, readable resources that don't require constant internet.</p>
+        <div class="layout">
+          <div class="stack">
+            <div class="card">
+              <h2>Free learning resources</h2>
+              <div class="resource"><div class="resourceicon">🌐</div><div><strong>DIKSHA</strong><small>Indian school curriculum resources; use online, save available material.</small></div><button class="btn secondary" data-url="https://diksha.gov.in/">Open</button></div>
+              <div class="resource"><div class="resourceicon">📖</div><div><strong>ePathshala</strong><small>NCERT books and learning material.</small></div><button class="btn secondary" data-url="https://epathshala.nic.in/">Open</button></div>
+              <div class="resource"><div class="resourceicon">🧮</div><div><strong>Khan Academy</strong><small>Practice and lessons; choose lower video quality on mobile data.</small></div><button class="btn secondary" data-url="https://www.khanacademy.org/">Open</button></div>
+              <div class="resource"><div class="resourceicon">🗣️</div><div><strong>Read this lesson aloud</strong><small>Uses your browser's speech feature when supported.</small></div><button class="btn secondary" id="readResource">Read</button></div>
+            </div>
+            <div class="card">
+              <h2>Save data with these habits</h2>
+              <p class="muted">• Download books and videos while on Wi-Fi.</p>
+              <p class="muted">• Prefer text summaries for revision.</p>
+              <p class="muted">• Turn off autoplay and select 144p or 240p video.</p>
+              <p class="muted">• Keep a copy of notes on this device.</p>
+            </div>
+          </div>
         </div>
-        <div id="quizResult" class="quiz-result hidden"></div>
-      </article>
-    </section>
+      </section>
 
-    <section id="revision" class="section">
-      <div class="section-heading">
-        <div><span class="eyebrow">YOUR PERSONAL LIBRARY</span><h2>Offline revision shelf</h2></div>
-        <p>Saved lessons stay on this browser for later revision.</p>
-      </div>
-      <div id="revisionList" class="revision-grid"></div>
-      <p id="emptyLibrary" class="empty-library">📚 Your shelf is empty. Generate a lesson and save it here.</p>
-    </section>
+      <section class="section" id="page-progress">
+        <h1 class="pageheading">Your progress</h1>
+        <p class="pageintro">Every small study session adds up.</p>
+        <div class="card">
+          <div class="statgrid">
+            <div class="stat"><b id="lessonsStat2">0</b><span>Lessons saved</span></div>
+            <div class="stat"><b id="attemptsStat2">0</b><span>Quiz attempts</span></div>
+            <div class="stat"><b id="bestStat2">—</b><span>Best score</span></div>
+          </div>
+          <div class="progressbar"><span id="progressFill2"></span></div>
+          <h2 style="margin-top:20px">Revision recommendation</h2>
+          <div id="recommendation2" class="note">Complete a quiz to get a suggestion.</div>
+        </div>
+        <div class="card" style="margin-top:18px"><h2>Recent quiz scores</h2><div id="scoreHistory" class="empty">No quizzes completed yet.</div></div>
+      </section>
 
-    <section id="progress" class="section">
-      <div class="section-heading">
-        <div><span class="eyebrow">STEP 04 · IMPROVE</span><h2>Your learning progress</h2></div>
-        <p>Use your quiz scores to decide what to revise next.</p>
-      </div>
-      <div class="progress-layout">
-        <article class="panel progress-panel">
-          <span class="progress-icon">🎯</span>
-          <h3>Revision recommendation</h3>
-          <p id="recommendationText">Complete a lesson quiz to receive a personalised revision suggestion.</p>
-          <button id="reviseRecommendedBtn" class="btn secondary hidden">Revise this lesson →</button>
-        </article>
-        <article class="panel history-panel">
-          <h3>Recent quiz scores</h3>
-          <div id="scoreHistory"></div>
-          <p id="emptyScores" class="muted">Your quiz attempts will appear here.</p>
-        </article>
-      </div>
-    </section>
+      <section class="section" id="page-planner">
+        <h1 class="pageheading">Study planner & focus timer</h1>
+        <p class="pageintro">A simple timer helps you focus without needing another app.</p>
+        <div class="layout">
+          <div class="stack">
+            <div class="card">
+              <div class="cardhead"><h2>Focus timer</h2><span>⏱️</span></div>
+              <div class="timer">
+                <div class="time" id="timeDisplay">25:00</div>
+                <p class="muted tiny">Choose a session length in minutes</p>
+                <input class="field" type="number" id="timerMinutes" min="1" max="180" value="25">
+                <div class="btnrow" style="justify-content:center">
+                  <button class="btn" id="timerStart">Start</button>
+                  <button class="btn secondary" id="timerPause">Pause</button>
+                  <button class="btn secondary" id="timerReset">Reset</button>
+                </div>
+                <p id="timerMessage" class="tiny muted">Try 25 minutes of focus, then take a short break.</p>
+              </div>
+            </div>
+            <div class="card">
+              <h2>Today's plan</h2>
+              <div class="fieldgroup" style="margin-top:13px"><label class="fieldlabel" for="planInput">Study goal</label><input id="planInput" class="field" placeholder="e.g. Revise 2 science chapters"></div>
+              <div class="fieldgroup"><label class="fieldlabel" for="planDate">Date</label><input id="planDate" type="date" class="field"></div>
+              <button class="btn" id="addPlan">Add to plan</button>
+              <div id="planList" style="margin-top:12px"></div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="card">
+              <h2>Student profile</h2>
+              <p class="tiny muted">Your profile is stored on this device.</p>
+              <div class="fieldgroup" style="margin-top:13px"><label class="fieldlabel" for="studentName">Name (optional)</label><input class="field" id="studentName" placeholder="Learner"></div>
+              <div class="fieldgroup"><label class="fieldlabel" for="studentId">Student ID</label><input class="field" id="studentId" placeholder="Enter your student ID"></div>
+              <button class="btn" id="saveProfile">Save profile</button>
+              <div class="note">Privacy: this prototype stores your profile only in this browser's local storage. Don't use a sensitive ID on a shared device.</div>
+            </div>
+            <div class="card">
+              <h2>Offline mode</h2>
+              <p class="muted tiny">Saved notes, quiz history and your plan remain available without internet on this device.</p>
+              <div class="resource"><div class="resourceicon">📥</div><div><strong>Local storage</strong><small>Progress saves automatically</small></div><span class="status">On</span></div>
+              <button class="btn secondary" id="downloadApp" style="width:100%">Save this page for offline use</button>
+              <p class="tiny muted">For reliable offline use after closing the browser, serve the app over HTTPS or localhost with a service worker.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="foot">LearnLite · Learning should not depend on how much data you can afford.</div>
+    </div>
   </main>
-
-  <footer><strong>LearnLite</strong> — Learn at your pace. Revise anywhere. <span>Built for accessible learning ✦</span></footer>
-  <div id="toast" class="toast" role="status"></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script src="script.js" defer></script>
 </body>
 </html>
