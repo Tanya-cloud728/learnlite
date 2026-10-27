@@ -1,639 +1,752 @@
+const $ = id => document.getElementById(id);
 
-document.addEventListener("DOMContentLoaded", () => {
-  const $ = id => document.getElementById(id);
+const STORE = "learnlite_v1";
 
-  const readStorage = (key, fallback) => {
-    try {
-      const value = localStorage.getItem(key);
-      return value === null ? fallback : JSON.parse(value);
-    } catch {
-      return fallback;
-    }
+let state = {
+  lessons: [],
+  attempts: [],
+  plans: [],
+  profile: {},
+  theme: "light"
+};
+
+try {
+  state = {
+    ...state,
+    ...JSON.parse(localStorage.getItem(STORE) || "{}")
   };
+} catch (e) {}
 
-  const saveData = (key, value) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      showToast("Browser storage is unavailable.");
+let currentLesson = null;
+let currentPhoto = null;
+let timerInterval = null;
+let seconds = 25 * 60;
+let running = false;
+
+const demoLesson = {
+  title: "Photosynthesis — a simple guide",
+
+  explanation: `Photosynthesis is the way green plants make their own food. Think of a leaf as a tiny food factory.
+
+• Sunlight provides the energy.
+• Roots absorb water from the soil.
+• Leaves take in carbon dioxide from the air.
+• Chlorophyll, the green pigment in leaves, helps capture sunlight.
+
+The plant uses these ingredients to make glucose (a kind of sugar) and releases oxygen into the air.
+
+Remember: sunlight + water + carbon dioxide → glucose + oxygen.
+
+Photosynthesis helps plants grow and provides much of the oxygen we breathe.`,
+
+  questions: [
+    {
+      q: "What is the main purpose of photosynthesis?",
+      opts: [
+        "To help plants make food",
+        "To absorb minerals only",
+        "To make soil",
+        "To cool the roots"
+      ],
+      a: 0
+    },
+    {
+      q: "Which part of a plant contains chlorophyll?",
+      opts: [
+        "Roots",
+        "Leaves",
+        "Flowers only",
+        "Seeds only"
+      ],
+      a: 1
+    },
+    {
+      q: "Which gas do plants take in for photosynthesis?",
+      opts: [
+        "Oxygen",
+        "Helium",
+        "Carbon dioxide",
+        "Hydrogen"
+      ],
+      a: 2
+    },
+    {
+      q: "What does a plant release into the air during photosynthesis?",
+      opts: [
+        "Smoke",
+        "Oxygen",
+        "Salt",
+        "Dust"
+      ],
+      a: 1
+    },
+    {
+      q: "Which energy source powers photosynthesis?",
+      opts: [
+        "Moonlight only",
+        "Sound",
+        "Sunlight",
+        "Wind alone"
+      ],
+      a: 2
     }
-  };
+  ]
+};
 
-  const safeText = value => String(value).replace(/[&<>"']/g, char => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;",
-    '"': "&quot;", "'": "&#039;"
-  }[char]));
-
-  let toastTimeout;
-  function showToast(message) {
-    $("toast").textContent = message;
-    $("toast").classList.add("show");
-    clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => $("toast").classList.remove("show"), 2600);
+function persist() {
+  try {
+    localStorage.setItem(STORE, JSON.stringify(state));
+  } catch (e) {
+    toast("Storage is full. Export your notes to keep a backup.");
   }
 
-  // Replace a video ID with another YouTube video's ID when needed.
-  // IDs below are sample educational video IDs. Check each video is available.
-  const courses = [
-    {
-      id: "html", title: "HTML Fundamentals", category: "Technology",
-      icon: "🌐", description: "Learn how web pages are structured.",
-      lessons: [
-        {
-          title: "Introduction to HTML",
-          text: "HTML stands for HyperText Markup Language. It provides the structure of a web page using elements such as headings, paragraphs, links and images.",
-          video: "kUMe1FH4CHE"
-        },
-        {
-          title: "HTML Elements and Tags",
-          text: "HTML elements usually contain an opening tag, content and a closing tag. For example, a paragraph uses the p element.",
-          video: "UB1O30fR-EE"
-        }
-      ]
-    },
-    {
-      id: "css", title: "CSS Styling", category: "Technology",
-      icon: "🎨", description: "Style websites with colors and layouts.",
-      lessons: [
-        {
-          title: "Introduction to CSS",
-          text: "CSS stands for Cascading Style Sheets. It controls the appearance, spacing, colors and layout of HTML elements.",
-          video: "OXGznpKZ_sA"
-        },
-        {
-          title: "CSS Selectors",
-          text: "Selectors choose which HTML elements receive a style. A class selector starts with a dot, while an ID selector starts with a hash.",
-          video: "yfoY53QXEnI"
-        }
-      ]
-    },
-    {
-      id: "js", title: "JavaScript Basics", category: "Technology",
-      icon: "💻", description: "Make your websites interactive.",
-      lessons: [
-        {
-          title: "JavaScript Introduction",
-          text: "JavaScript adds behaviour to websites. It can respond to clicks, validate forms and update content dynamically.",
-          video: "W6NZfCO5SIk"
-        },
-        {
-          title: "Variables and Data",
-          text: "Variables store values. JavaScript commonly uses let and const to declare variables.",
-          video: "hdI2bqOjy3c"
-        }
-      ]
-    },
-    {
-      id: "science", title: "Everyday Science", category: "Science",
-      icon: "🔬", description: "Explore basic scientific ideas.",
-      lessons: [
-        {
-          title: "The Scientific Method",
-          text: "The scientific method involves observing a question, making a hypothesis, testing it and evaluating evidence.",
-          video: "yi0hwFDQTSQ"
-        },
-        {
-          title: "Energy Around Us",
-          text: "Energy can take many forms, including kinetic, potential, thermal, chemical and electrical energy.",
-          video: "w4QFJb9a8vo"
-        }
-      ]
-    },
-    {
-      id: "math", title: "Mathematics Essentials", category: "Mathematics",
-      icon: "📐", description: "Practise useful mathematical concepts.",
-      lessons: [
-        {
-          title: "Percentages",
-          text: "A percentage means a quantity out of 100. To calculate x percent of a number, multiply the number by x and divide by 100.",
-          video: "JeVSmq1Nrpw"
-        },
-        {
-          title: "Basic Algebra",
-          text: "Algebra uses letters to represent unknown numbers. For example, if x + 3 = 8, subtracting 3 gives x = 5.",
-          video: "NybHckSEQBI"
-        }
-      ]
-    },
-    {
-      id: "communication", title: "Communication Skills", category: "Communication",
-      icon: "🗣️", description: "Improve everyday communication.",
-      lessons: [
-        {
-          title: "Active Listening",
-          text: "Active listening means paying attention, avoiding unnecessary interruptions and checking that you understood the speaker.",
-          video: "i3ku5nx4sL8"
-        },
-        {
-          title: "Speaking with Confidence",
-          text: "Prepare your main points, speak clearly, practise regularly and allow yourself time to think.",
-          video: "HAnw168huqA"
-        }
-      ]
-    }
-  ];
+  updateStats();
+  renderNotes();
+  renderPlans();
+  renderScores();
+}
 
-  let completed = readStorage("ll_completed", []);
-  let started = readStorage("ll_started", []);
-  let bookmarks = readStorage("ll_bookmarks", []);
-  let quizPoints = readStorage("ll_quizPoints", 0);
-  let focusMinutes = readStorage("ll_focusMinutes", 0);
-  let tasks = readStorage("ll_tasks", []);
-  let notes = readStorage("ll_notes", {});
-  let currentCourse = null;
-  let currentLesson = null;
-  let showSavedOnly = false;
+function toast(message) {
+  $("toast").textContent = message;
+  $("toast").style.display = "block";
 
-  // Online/offline status
-  function updateNetwork() {
-    const online = navigator.onLine;
-    $("networkStatus").textContent = online ? "● Online" : "● Offline";
-    $("networkStatus").className = online ? "online" : "offline";
-  }
+  setTimeout(() => {
+    $("toast").style.display = "none";
+  }, 2600);
+}
 
-  window.addEventListener("online", updateNetwork);
-  window.addEventListener("offline", updateNetwork);
-  updateNetwork();
-
-  // Dark mode
-  document.body.classList.toggle("dark", readStorage("ll_dark", false));
-
-  $("themeToggle").addEventListener("click", () => {
-    const dark = document.body.classList.toggle("dark");
-    saveData("ll_dark", dark);
-    $("themeToggle").textContent = dark ? "☀️ Theme" : "🌙 Theme";
+function nav(page) {
+  document.querySelectorAll(".section").forEach(section => {
+    section.classList.remove("active");
   });
 
-  $("themeToggle").textContent =
-    document.body.classList.contains("dark") ? "☀️ Theme" : "🌙 Theme";
+  $("page-" + page)?.classList.add("active");
 
-  function lessonKey(course, lesson) {
-    return `${course.id}:${lesson.title}`;
-  }
-
-  function isComplete(course, lesson) {
-    return completed.includes(lessonKey(course, lesson));
-  }
-
-  function courseProgress(course) {
-    const count = course.lessons.filter(lesson => isComplete(course, lesson)).length;
-    return Math.round(count / course.lessons.length * 100);
-  }
-
-  // Course cards and filters
-  function renderCourses() {
-    const query = $("courseSearch").value.trim().toLowerCase();
-    const category = $("categoryFilter").value;
-
-    const filtered = courses.filter(course => {
-      const matchesText =
-        `${course.title} ${course.description} ${course.category}`
-          .toLowerCase().includes(query);
-      const matchesCategory = category === "All" || course.category === category;
-      const matchesBookmark = !showSavedOnly || bookmarks.includes(course.id);
-      return matchesText && matchesCategory && matchesBookmark;
-    });
-
-    $("courseGrid").innerHTML = filtered.length
-      ? filtered.map(course => `
-        <article class="course-card">
-          <div class="course-icon">${course.icon}</div>
-          <div class="course-meta">${safeText(course.category)} · ${course.lessons.length} lessons</div>
-          <h3>${safeText(course.title)}</h3>
-          <p>${safeText(course.description)}</p>
-          <div class="progress-track">
-            <div class="progress-fill" style="width:${courseProgress(course)}%"></div>
-          </div>
-          <p>${courseProgress(course)}% completed</p>
-          <div class="button-row">
-            <button type="button" data-open-course="${course.id}">Open course</button>
-            <button type="button" data-bookmark="${course.id}" aria-label="Bookmark ${safeText(course.title)}">
-              ${bookmarks.includes(course.id) ? "★ Saved" : "☆ Save"}
-            </button>
-          </div>
-        </article>
-      `).join("")
-      : "<p>No courses found. Try another search.</p>";
-  }
-
-  $("courseSearch").addEventListener("input", renderCourses);
-  $("categoryFilter").addEventListener("change", renderCourses);
-
-  $("showBookmarks").addEventListener("click", () => {
-    showSavedOnly = !showSavedOnly;
-    $("showBookmarks").textContent = showSavedOnly ? "Show all courses" : "☆ Saved courses";
-    renderCourses();
+  document.querySelectorAll(".nav button").forEach(button => {
+    button.classList.toggle(
+      "active",
+      button.dataset.page === page
+    );
   });
+}
 
-  $("courseGrid").addEventListener("click", event => {
-    const openButton = event.target.closest("[data-open-course]");
-    const saveButton = event.target.closest("[data-bookmark]");
-
-    if (saveButton) {
-      const id = saveButton.dataset.bookmark;
-      bookmarks = bookmarks.includes(id)
-        ? bookmarks.filter(item => item !== id)
-        : [...bookmarks, id];
-      saveData("ll_bookmarks", bookmarks);
-      renderCourses();
-      renderAchievements();
-      showToast("Bookmark updated.");
-    }
-
-    if (openButton) {
-      const course = courses.find(item => item.id === openButton.dataset.openCourse);
-      if (!course) return;
-
-      currentCourse = course;
-      currentLesson = course.lessons[0];
-
-      if (!started.includes(course.id)) {
-        started.push(course.id);
-        saveData("ll_started", started);
-      }
-
-      renderLessonList();
-      renderLesson();
-      updateDashboard();
-      $("lessonArea").scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  });
-
-  // Lessons and video player
-  function renderLessonList() {
-    if (!currentCourse) return;
-
-    $("lessonList").innerHTML = currentCourse.lessons.map((lesson, index) => `
-      <button type="button"
-        class="${lesson === currentLesson ? "active" : ""}"
-        data-lesson-index="${index}">
-        ${isComplete(currentCourse, lesson) ? "✓ " : ""}
-        ${index + 1}. ${safeText(lesson.title)}
-      </button>
-    `).join("");
-  }
-
-  $("lessonList").addEventListener("click", event => {
-    const button = event.target.closest("[data-lesson-index]");
-    if (!button || !currentCourse) return;
-
-    currentLesson = currentCourse.lessons[Number(button.dataset.lessonIndex)];
-    renderLessonList();
-    renderLesson();
-  });
-
-  function renderLesson() {
-    if (!currentCourse || !currentLesson) return;
-
-    $("lessonTitle").textContent = currentLesson.title;
-    $("lessonText").textContent = currentLesson.text;
-    $("lessonNotes").value = notes[lessonKey(currentCourse, currentLesson)] || "";
-
-    const videoId = currentLesson.video;
-    const container = $("videoContainer");
-
-    container.replaceChildren();
-
-    const iframe = document.createElement("iframe");
-    iframe.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`;
-    iframe.title = `${currentLesson.title} video`;
-    iframe.loading = "lazy";
-    iframe.referrerPolicy = "strict-origin-when-cross-origin";
-    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-    iframe.allowFullscreen = true;
-    container.appendChild(iframe);
-
-    const link = document.createElement("a");
-    link.className = "video-link";
-    link.href = `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.textContent = "↗ Watch on YouTube";
-    $("videoHelp").replaceChildren(link);
-
-    $("completeLesson").textContent =
-      isComplete(currentCourse, currentLesson) ? "✓ Completed — undo" : "✓ Mark complete";
-  }
-
-  $("lessonNotes").addEventListener("input", () => {
-    if (!currentCourse || !currentLesson) return;
-    notes[lessonKey(currentCourse, currentLesson)] = $("lessonNotes").value;
-    saveData("ll_notes", notes);
-  });
-
-  $("completeLesson").addEventListener("click", () => {
-    if (!currentCourse || !currentLesson) {
-      showToast("Open a course and select a lesson first.");
+document.querySelectorAll(".nav button").forEach(button => {
+  button.addEventListener("click", () => {
+    if (button.dataset.page === "learn") {
+      nav("home");
+      $("photo").click();
       return;
     }
 
-    const key = lessonKey(currentCourse, currentLesson);
-
-    if (completed.includes(key)) {
-      completed = completed.filter(item => item !== key);
-    } else {
-      completed.push(key);
-    }
-
-    saveData("ll_completed", completed);
-    renderLessonList();
-    renderLesson();
-    renderCourses();
-    updateDashboard();
-    renderAchievements();
+    nav(button.dataset.page);
   });
-
-  $("readLesson").addEventListener("click", () => {
-    if (!currentLesson) return showToast("Select a lesson first.");
-    if (!("speechSynthesis" in window)) return showToast("Speech is not supported in this browser.");
-
-    speechSynthesis.cancel();
-    speechSynthesis.speak(new SpeechSynthesisUtterance(
-      `${currentLesson.title}. ${currentLesson.text}`
-    ));
-  });
-
-  $("stopReading").addEventListener("click", () => {
-    if ("speechSynthesis" in window) speechSynthesis.cancel();
-  });
-
-  // Quiz
-  const questions = [
-    { q: "What does HTML stand for?", options: ["HyperText Markup Language", "HighText Machine Language", "Home Tool Markup Language"], answer: 0, explanation: "HTML structures content on web pages." },
-    { q: "Which language styles a webpage?", options: ["SQL", "CSS", "C++"], answer: 1, explanation: "CSS controls layout, colours and styling." },
-    { q: "Which keyword declares a block-scoped variable that can be reassigned?", options: ["let", "const", "fixed"], answer: 0, explanation: "Use let when the variable needs reassignment." },
-    { q: "What is 20% of 150?", options: ["15", "20", "30"], answer: 2, explanation: "150 × 20 ÷ 100 = 30." },
-    { q: "What is active listening?", options: ["Interrupting often", "Listening attentively", "Looking away"], answer: 1, explanation: "Active listening means paying attention and understanding." },
-    { q: "Which is a form of energy?", options: ["Thermal energy", "A kilogram", "A centimetre"], answer: 0, explanation: "Thermal energy is associated with particle motion." }
-  ];
-
-  let quizIndex = 0;
-  let selectedAnswer = null;
-  let answered = false;
-  let quizRunPoints = 0;
-
-  function renderQuiz() {
-    const question = questions[quizIndex];
-    selectedAnswer = null;
-    answered = false;
-
-    $("quizProgress").textContent = `Question ${quizIndex + 1} of ${questions.length}`;
-    $("quizQuestion").textContent = question.q;
-    $("quizFeedback").textContent = "";
-    $("quizOptions").innerHTML = question.options.map((option, index) => `
-      <button type="button" class="quiz-option" data-answer="${index}">
-        ${String.fromCharCode(65 + index)}. ${safeText(option)}
-      </button>
-    `).join("");
-
-    $("checkAnswer").disabled = false;
-    $("nextQuestion").disabled = true;
-    $("nextQuestion").textContent =
-      quizIndex === questions.length - 1 ? "Finish quiz" : "Next question →";
-  }
-
-  $("quizOptions").addEventListener("click", event => {
-    const button = event.target.closest("[data-answer]");
-    if (!button || answered) return;
-
-    selectedAnswer = Number(button.dataset.answer);
-    document.querySelectorAll(".quiz-option").forEach(option => {
-      option.classList.toggle("selected", option === button);
-    });
-  });
-
-  $("checkAnswer").addEventListener("click", () => {
-    if (answered) return;
-    if (selectedAnswer === null) return showToast("Choose an answer first.");
-
-    answered = true;
-    const question = questions[quizIndex];
-    const correct = selectedAnswer === question.answer;
-
-    if (correct) {
-      quizRunPoints += 10;
-      quizPoints += 10;
-      saveData("ll_quizPoints", quizPoints);
-    }
-
-    $("quizFeedback").textContent =
-      `${correct ? "Correct! 🎉" : "Not quite."} ${question.explanation}`;
-
-    $("quizOptions").querySelectorAll("button").forEach((button, index) => {
-      button.disabled = true;
-      if (index === question.answer) button.classList.add("selected");
-    });
-
-    $("checkAnswer").disabled = true;
-    $("nextQuestion").disabled = false;
-    updateDashboard();
-    renderAchievements();
-  });
-
-  $("nextQuestion").addEventListener("click", () => {
-    if (!answered) return;
-
-    if (quizIndex < questions.length - 1) {
-      quizIndex++;
-      renderQuiz();
-    } else {
-      $("quizQuestion").textContent = "Quiz complete! 🎉";
-      $("quizProgress").textContent = `You scored ${quizRunPoints} points this round.`;
-      $("quizOptions").innerHTML = "";
-      $("quizFeedback").textContent = "Great work! Restart to practise again.";
-      $("checkAnswer").disabled = true;
-      $("nextQuestion").disabled = true;
-    }
-  });
-
-  $("restartQuiz").addEventListener("click", () => {
-    quizIndex = 0;
-    quizRunPoints = 0;
-    renderQuiz();
-  });
-
-  // Study planner
-  function renderTasks() {
-    $("taskList").innerHTML = tasks.length
-      ? tasks.map(task => `
-        <div class="task-item ${task.done ? "done" : ""}">
-          <label>
-            <input type="checkbox" data-task-toggle="${task.id}" ${task.done ? "checked" : ""}>
-            <span>
-              <span class="task-title">${safeText(task.text)}</span>
-              ${task.date ? `<small> · ${safeText(task.date)}</small>` : ""}
-            </span>
-          </label>
-          <button type="button" data-task-delete="${task.id}">Delete</button>
-        </div>
-      `).join("")
-      : "<p class='muted'>No tasks yet. Add your first study goal!</p>";
-  }
-
-  $("taskForm").addEventListener("submit", event => {
-    event.preventDefault();
-    const text = $("taskInput").value.trim();
-    if (!text) return;
-
-    tasks.push({
-      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      text,
-      date: $("taskDate").value,
-      done: false
-    });
-
-    saveData("ll_tasks", tasks);
-    $("taskInput").value = "";
-    renderTasks();
-    renderAchievements();
-  });
-
-  $("taskList").addEventListener("change", event => {
-    const checkbox = event.target.closest("[data-task-toggle]");
-    if (!checkbox) return;
-
-    const task = tasks.find(item => item.id === checkbox.dataset.taskToggle);
-    if (!task) return;
-
-    task.done = checkbox.checked;
-    saveData("ll_tasks", tasks);
-    renderTasks();
-    renderAchievements();
-  });
-
-  $("taskList").addEventListener("click", event => {
-    const button = event.target.closest("[data-task-delete]");
-    if (!button) return;
-
-    tasks = tasks.filter(item => item.id !== button.dataset.taskDelete);
-    saveData("ll_tasks", tasks);
-    renderTasks();
-    renderAchievements();
-  });
-
-  // Focus timer
-  let remainingSeconds = Number($("focusDuration").value) * 60;
-  let timerInterval = null;
-
-  function displayTimer() {
-    const minutes = Math.floor(remainingSeconds / 60);
-    const seconds = remainingSeconds % 60;
-    $("timerDisplay").textContent =
-      `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  }
-
-  function stopTimer() {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-
-  $("focusDuration").addEventListener("change", () => {
-    stopTimer();
-    remainingSeconds = Number($("focusDuration").value) * 60;
-    displayTimer();
-  });
-
-  $("startTimer").addEventListener("click", () => {
-    if (timerInterval) return;
-
-    if (remainingSeconds <= 0) {
-      remainingSeconds = Number($("focusDuration").value) * 60;
-      displayTimer();
-    }
-
-    timerInterval = setInterval(() => {
-      remainingSeconds--;
-      displayTimer();
-
-      if (remainingSeconds <= 0) {
-        stopTimer();
-        focusMinutes += Number($("focusDuration").value);
-        saveData("ll_focusMinutes", focusMinutes);
-        updateDashboard();
-        renderAchievements();
-        showToast("Focus session complete! Take a short break. 🎉");
-      }
-    }, 1000);
-  });
-
-  $("pauseTimer").addEventListener("click", stopTimer);
-
-  $("resetTimer").addEventListener("click", () => {
-    stopTimer();
-    remainingSeconds = Number($("focusDuration").value) * 60;
-    displayTimer();
-  });
-
-  // Demo Study Buddy: predefined responses, not an AI service.
-  $("chatForm").addEventListener("submit", event => {
-    event.preventDefault();
-
-    const message = $("chatInput").value.trim();
-    if (!message) return;
-
-    const userMessage = document.createElement("p");
-    userMessage.className = "user-message";
-    userMessage.textContent = message;
-    $("chatMessages").appendChild(userMessage);
-
-    const lower = message.toLowerCase();
-    let response;
-
-    if (lower.includes("motivat") || lower.includes("tired")) {
-      response = "Start with just 10 minutes. Small, consistent progress matters more than perfection.";
-    } else if (lower.includes("html") || lower.includes("css") || lower.includes("javascript")) {
-      response = "Try a short lesson, write a small example yourself, and explain what you learned in your own words.";
-    } else if (lower.includes("exam") || lower.includes("revision")) {
-      response = "Revise one topic, solve 3 practice questions, then test yourself without looking at your notes.";
-    } else if (lower.includes("plan") || lower.includes("time")) {
-      response = "Pick your three most important tasks, estimate their time and start with the hardest one.";
-    } else {
-      response = "Try this: study for 25 minutes, take a short break, and write down three things you learned.";
-    }
-
-    const botMessage = document.createElement("p");
-    botMessage.className = "bot-message";
-    botMessage.textContent = response;
-    $("chatMessages").appendChild(botMessage);
-
-    $("chatInput").value = "";
-    $("chatMessages").scrollTop = $("chatMessages").scrollHeight;
-  });
-
-  // Achievements
-  function renderAchievements() {
-    const allTasksDone = tasks.length > 0 && tasks.every(task => task.done);
-
-    const achievements = [
-      ["🌱", "First Steps", "Complete your first lesson.", completed.length >= 1],
-      ["📚", "Curious Learner", "Start at least three courses.", started.length >= 3],
-      ["🏆", "Quiz Champion", "Earn 50 quiz points.", quizPoints >= 50],
-      ["⏱️", "Focus Hero", "Focus for 60 minutes.", focusMinutes >= 60],
-      ["📅", "Planner Pro", "Finish all your study tasks.", allTasksDone],
-      ["⭐", "Saved for Later", "Bookmark a course.", bookmarks.length >= 1]
-    ];
-
-    $("achievements").innerHTML = achievements.map(([icon, title, description, unlocked]) => `
-      <article class="achievement-card ${unlocked ? "" : "locked"}">
-        <strong>${icon} ${safeText(title)} ${unlocked ? "✓" : "🔒"}</strong>
-        <p>${safeText(description)}</p>
-      </article>
-    `).join("");
-  }
-
-  // Dashboard
-  function updateDashboard() {
-    $("coursesStarted").textContent = started.length;
-    $("lessonsCompleted").textContent = completed.length;
-    $("focusMinutes").textContent = focusMinutes;
-    $("quizPoints").textContent = quizPoints;
-  }
-
-  // Initial render
-  renderCourses();
-  renderQuiz();
-  renderTasks();
-  renderAchievements();
-  updateDashboard();
-  displayTimer();
 });
+
+document.querySelectorAll("[data-goto]").forEach(button => {
+  button.addEventListener("click", () => {
+    nav(button.dataset.goto);
+  });
+});
+
+document.querySelectorAll("[data-url]").forEach(button => {
+  button.addEventListener("click", () => {
+    window.open(button.dataset.url, "_blank", "noopener");
+  });
+});
+
+function applyTheme() {
+  document.documentElement.dataset.theme =
+    state.theme === "dark" ? "dark" : "light";
+
+  $("themeBtn").textContent =
+    state.theme === "dark" ? "☀" : "☾";
+}
+
+$("themeBtn").onclick = () => {
+  state.theme = state.theme === "dark" ? "light" : "dark";
+  applyTheme();
+  persist();
+};
+
+$("studentBtn").onclick = () => {
+  nav("planner");
+  $("studentId").focus();
+};
+
+$("photo").addEventListener("change", event => {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  currentPhoto = file;
+
+  const reader = new FileReader();
+
+  reader.onload = event => {
+    $("preview").src = event.target.result;
+    $("preview").style.display = "block";
+  };
+
+  reader.readAsDataURL(file);
+
+  $("explainStatus").textContent = "Photo ready";
+
+  toast("Photo added. Tap Explain simply.");
+});
+
+$("sampleBtn").onclick = () => {
+  currentPhoto = null;
+  $("topic").value = "Biology";
+
+  loadLesson(demoLesson);
+
+  toast("Sample lesson loaded — try the quiz!");
+};
+
+function loadLesson(data) {
+  currentLesson = {
+    ...data,
+    createdAt: new Date().toISOString(),
+    saved: false
+  };
+
+  $("explanation").className = "result";
+  $("explanation").textContent = data.explanation;
+
+  $("explainStatus").textContent = "Lesson ready";
+
+  renderQuiz(data.questions);
+
+  $("saveBtn").disabled = false;
+  $("saveQuiz").disabled = false;
+  $("submitQuiz").disabled = false;
+
+  $("quizFeedback").textContent = "";
+}
+
+$("explainBtn").onclick = () => {
+  const topic = $("topic").value.trim();
+
+  if (currentPhoto) {
+    toast(
+      "Photo selected. The current demo cannot read image text yet. An AI model integration is needed."
+    );
+
+    if (!currentLesson) {
+      loadLesson(demoLesson);
+    }
+
+    $("explainStatus").textContent = "Demo lesson shown";
+    return;
+  }
+
+  if (!currentLesson) {
+    loadLesson(demoLesson);
+    toast("Showing sample lesson. This is demo content, not AI-generated.");
+    return;
+  }
+
+  loadLesson(demoLesson);
+};
+
+function renderQuiz(questions) {
+  $("quizArea").className = "";
+  $("quizArea").innerHTML = "";
+
+  questions.forEach((question, index) => {
+    const div = document.createElement("div");
+
+    div.className = "quizq";
+
+    div.innerHTML =
+      `<p>${index + 1}. ${escapeHtml(question.q)}</p>` +
+      question.opts.map((option, optionIndex) => `
+        <label class="option">
+          <input
+            type="radio"
+            name="q${index}"
+            value="${optionIndex}"
+          >
+          <span>${escapeHtml(option)}</span>
+        </label>
+      `).join("");
+
+    $("quizArea").appendChild(div);
+  });
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character]);
+}
+
+$("saveBtn").onclick = () => {
+  if (!currentLesson) return;
+
+  const existing = state.lessons.find(
+    lesson => lesson.title === currentLesson.title
+  );
+
+  if (existing) {
+    toast("This lesson is already saved.");
+    return;
+  }
+
+  const copy = {
+    ...currentLesson,
+    saved: true,
+    topic: $("topic").value || "General",
+    photoName: currentPhoto?.name || ""
+  };
+
+  state.lessons.unshift(copy);
+  currentLesson.saved = true;
+
+  persist();
+
+  toast("Lesson saved on this device for offline revision.");
+};
+
+$("saveQuiz").onclick = () => {
+  if (!currentLesson) return;
+
+  let lesson = state.lessons.find(
+    item => item.title === currentLesson.title
+  );
+
+  if (!lesson) {
+    lesson = {
+      ...currentLesson,
+      saved: true,
+      topic: $("topic").value || "General"
+    };
+
+    state.lessons.unshift(lesson);
+  }
+
+  lesson.questions = currentLesson.questions;
+
+  persist();
+
+  toast("Quiz saved with your lesson.");
+};
+
+$("submitQuiz").onclick = () => {
+  if (!currentLesson) return;
+
+  let score = 0;
+  let answered = 0;
+
+  currentLesson.questions.forEach((question, index) => {
+    const picked = document.querySelector(
+      `input[name="q${index}"]:checked`
+    );
+
+    if (picked) {
+      answered++;
+
+      if (+picked.value === question.a) {
+        score++;
+      }
+    }
+  });
+
+  if (answered < currentLesson.questions.length) {
+    toast("Answer all five questions first.");
+    return;
+  }
+
+  const percent = Math.round(
+    score / currentLesson.questions.length * 100
+  );
+
+  state.attempts.unshift({
+    title: currentLesson.title,
+    score,
+    total: currentLesson.questions.length,
+    percent,
+    date: new Date().toISOString()
+  });
+
+  const weak = currentLesson.questions
+    .filter((question, index) => {
+      const picked = document.querySelector(
+        `input[name="q${index}"]:checked`
+      );
+
+      return !picked || Number(picked.value) !== question.a;
+    })
+    .map(question => question.q);
+
+  $("quizFeedback").innerHTML = `
+    <div class="note">
+      <strong>Your score: ${score}/5 (${percent}%)</strong>
+      <br>
+      ${
+        percent >= 80
+          ? "Great work! Review once more to lock it in."
+          : percent >= 60
+            ? "Good start. Re-read the key ideas and retry."
+            : "No stress — read the explanation slowly, then try again."
+      }
+      <br><br>
+      <b>Revise next:</b>
+      ${
+        weak.length
+          ? escapeHtml(weak.join("; "))
+          : "Try a new topic or explain this idea in your own words."
+      }
+    </div>
+  `;
+
+  state.lastRecommendation = weak.length
+    ? weak.slice(0, 3)
+    : ["Try a new topic"];
+
+  persist();
+
+  toast("Score recorded on this device.");
+};
+
+function updateStats() {
+  const best = state.attempts.length
+    ? Math.max(...state.attempts.map(attempt => attempt.percent)) + "%"
+    : "—";
+
+  ["lessonsStat", "lessonsStat2"].forEach(id => {
+    $(id).textContent = state.lessons.length;
+  });
+
+  ["attemptsStat", "attemptsStat2"].forEach(id => {
+    $(id).textContent = state.attempts.length;
+  });
+
+  ["bestStat", "bestStat2"].forEach(id => {
+    $(id).textContent = best;
+  });
+
+  const average = state.attempts.length
+    ? Math.round(
+        state.attempts.reduce(
+          (total, attempt) => total + attempt.percent,
+          0
+        ) / state.attempts.length
+      )
+    : 0;
+
+  ["progressFill", "progressFill2"].forEach(id => {
+    $(id).style.width = average + "%";
+  });
+
+  $("progressCaption").textContent = state.attempts.length
+    ? `Average quiz score: ${average}%. Keep practising!`
+    : "Your progress is saved on this device.";
+
+  const recommendation = state.lastRecommendation?.length
+    ? `Focus on: ${state.lastRecommendation.join(", ")}. Re-read the explanation and retry the quiz.`
+    : "Take your first quiz to get a revision recommendation based on your score.";
+
+  $("recommendation").textContent = recommendation;
+  $("recommendation2").textContent = recommendation;
+}
+
+function renderNotes() {
+  const element = $("notesList");
+
+  if (!element) return;
+
+  if (!state.lessons.length) {
+    element.innerHTML =
+      '<div class="empty">No saved lessons yet. Create a lesson first.</div>';
+    return;
+  }
+
+  element.innerHTML = state.lessons.map((lesson, index) => `
+    <div class="noteitem">
+      <strong>${escapeHtml(lesson.title)}</strong>
+      <span class="tiny muted">
+        ${new Date(lesson.createdAt || Date.now()).toLocaleDateString()}
+        · Saved on this device
+      </span>
+      <p>
+        ${escapeHtml(lesson.explanation.slice(0, 300))}
+        ${lesson.explanation.length > 300 ? "…" : ""}
+      </p>
+      <div class="btnrow">
+        <button class="btn secondary" onclick="openSaved(${index})">Revise</button>
+        <button class="btn secondary" onclick="deleteSaved(${index})">Delete</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+window.openSaved = index => {
+  const lesson = state.lessons[index];
+
+  if (!lesson) return;
+
+  loadLesson(lesson);
+  $("topic").value = lesson.topic || "";
+
+  nav("home");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  toast("Saved lesson opened.");
+};
+
+window.deleteSaved = index => {
+  state.lessons.splice(index, 1);
+  persist();
+  toast("Saved lesson deleted.");
+};
+
+function renderScores() {
+  const element = $("scoreHistory");
+
+  if (!state.attempts.length) {
+    element.className = "empty";
+    element.textContent = "No quizzes completed yet.";
+    return;
+  }
+
+  element.className = "";
+
+  element.innerHTML = state.attempts.slice(0, 10).map(attempt => `
+    <div class="resource">
+      <div class="resourceicon">✓</div>
+      <div>
+        <strong>${escapeHtml(attempt.title)}</strong>
+        <small>${new Date(attempt.date).toLocaleDateString()}</small>
+      </div>
+      <b style="margin-left:auto;color:var(--accent)">
+        ${attempt.score}/${attempt.total}
+      </b>
+    </div>
+  `).join("");
+}
+
+function renderPlans() {
+  const element = $("planList");
+
+  if (!element) return;
+
+  element.innerHTML = state.plans.length
+    ? state.plans.map((plan, index) => `
+        <label class="option">
+          <input
+            type="checkbox"
+            ${plan.done ? "checked" : ""}
+            onchange="togglePlan(${index},this.checked)"
+          >
+          <span>
+            <b>${escapeHtml(plan.text)}</b>
+            <br>
+            <small class="muted">${escapeHtml(plan.date || "No date")}</small>
+          </span>
+          <button
+            class="btn ghost"
+            onclick="event.preventDefault();removePlan(${index})"
+          >×</button>
+        </label>
+      `).join("")
+    : '<div class="empty">No goals added yet.</div>';
+}
+
+window.togglePlan = (index, value) => {
+  state.plans[index].done = value;
+  persist();
+};
+
+window.removePlan = index => {
+  state.plans.splice(index, 1);
+  persist();
+};
+
+$("addPlan").onclick = () => {
+  const text = $("planInput").value.trim();
+
+  if (!text) {
+    toast("Enter a study goal first.");
+    return;
+  }
+
+  state.plans.push({
+    text,
+    date: $("planDate").value,
+    done: false
+  });
+
+  $("planInput").value = "";
+
+  persist();
+
+  toast("Study goal added.");
+};
+
+$("saveProfile").onclick = () => {
+  state.profile = {
+    name: $("studentName").value.trim(),
+    id: $("studentId").value.trim()
+  };
+
+  persist();
+
+  toast("Profile saved on this device.");
+};
+
+$("exportBtn").onclick = () => {
+  const text = state.lessons.map(lesson => `
+${lesson.title}
+
+${lesson.explanation}
+
+Quiz:
+${(lesson.questions || []).map(
+  (question, index) => `${index + 1}. ${question.q}`
+).join("\n")}
+  `).join("\n\n------------------\n\n");
+
+  download(
+    "learnlite-notes.txt",
+    text || "No saved notes yet."
+  );
+};
+
+function download(filename, text) {
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(
+    new Blob([text], { type: "text/plain" })
+  );
+
+  link.download = filename;
+  link.click();
+
+  URL.revokeObjectURL(link.href);
+}
+
+$("downloadApp").onclick = () => {
+  toast(
+    "For offline use, open LearnLite through localhost or HTTPS and let the service worker cache the app."
+  );
+};
+
+function readLesson() {
+  const text = currentLesson?.explanation ||
+    "Welcome to LearnLite. Upload a textbook photo to begin learning.";
+
+  if ("speechSynthesis" in window) {
+    speechSynthesis.cancel();
+    speechSynthesis.speak(
+      new SpeechSynthesisUtterance(text)
+    );
+  } else {
+    toast("Read-aloud is not supported by this browser.");
+  }
+}
+
+$("readBtn").onclick = readLesson;
+$("readResource").onclick = readLesson;
+
+$("timerMinutes").onchange = () => {
+  if (!running) {
+    seconds = Math.max(
+      1,
+      Math.min(180, +$("timerMinutes").value || 25)
+    ) * 60;
+
+    showTime();
+  }
+};
+
+function showTime() {
+  $("timeDisplay").textContent =
+    String(Math.floor(seconds / 60)).padStart(2, "0") +
+    ":" +
+    String(seconds % 60).padStart(2, "0");
+}
+
+$("timerStart").onclick = () => {
+  if (running) return;
+
+  running = true;
+  $("timerMessage").textContent =
+    "Focus time — one small step at a time.";
+
+  timerInterval = setInterval(() => {
+    if (seconds > 0) {
+      seconds--;
+      showTime();
+    } else {
+      clearInterval(timerInterval);
+      running = false;
+
+      $("timerMessage").textContent =
+        "Session complete! Take a short break. 🌱";
+
+      if (
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        new Notification("LearnLite: Focus session complete!");
+      }
+    }
+  }, 1000);
+};
+
+$("timerPause").onclick = () => {
+  clearInterval(timerInterval);
+  running = false;
+
+  $("timerMessage").textContent =
+    "Timer paused. Resume when you are ready.";
+};
+
+$("timerReset").onclick = () => {
+  clearInterval(timerInterval);
+  running = false;
+
+  seconds = Math.max(
+    1,
+    Math.min(180, +$("timerMinutes").value || 25)
+  ) * 60;
+
+  showTime();
+
+  $("timerMessage").textContent = "Timer reset.";
+};
+
+function connection() {
+  const online = navigator.onLine;
+
+  $("connection").textContent = online
+    ? "● Connected"
+    : "● Offline mode";
+
+  $("offlineBanner").classList.toggle("show", !online);
+}
+
+window.addEventListener("online", connection);
+window.addEventListener("offline", connection);
+
+function init() {
+  applyTheme();
+  connection();
+
+  $("studentName").value = state.profile.name || "";
+  $("studentId").value = state.profile.id || "";
+  $("planDate").value = new Date().toISOString().slice(0, 10);
+
+  updateStats();
+  renderNotes();
+  renderPlans();
+  renderScores();
+  showTime();
+}
+
+init();
